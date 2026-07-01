@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BPO Training Analytics Portal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Custom Fonts & Tailwind Configuration -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar styles */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
+
+  <!-- HEADER SECTION -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <!-- SVG Icon -->
+        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" strokeLinejoin="round" d="M11 3.055A9.003 9.003 0 1020.945 13H11V3.055z" />
+          <path stroke-linecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-white">BPO Training Analytics Portal</h1>
+        <p class="text-xs text-slate-400">Collaborative Cross-BPO Dashboard & Ledger Transposer</p>
+      </div>
+    </div>
+
+    <!-- SELECT BPO SITE TRIGGER -->
+    <div class="flex items-center gap-2">
+      <label for="site-select" class="text-xs text-slate-400 font-medium whitespace-nowrap">Active BPO Site:</label>
+      <select 
+        id="site-select" 
+        class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 font-semibold cursor-pointer outline-none"
+      >
+        <option value="TaskUs - Cali">TaskUs - Cali</option>
+        <option value="Atain - Cape Town">Atain - Cape Town</option>
+        <option value="TTEC - Duluth">TTEC - Duluth</option>
+        <option value="TTEC - Cairo">TTEC - Cairo</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- SUBNAV / WORKSPACE TAB SWITCHER -->
+  <div class="bg-slate-900 border-b border-slate-800 px-6 py-2 flex items-center justify-between overflow-x-auto">
+    <div class="flex space-x-1" role="tablist">
+      <button
+        id="tab-btn-analytics"
+        onclick="switchTab('analytics')"
+        class="px-4 py-2 rounded-md text-sm font-semibold transition bg-indigo-600/25 text-indigo-400 border border-indigo-500/30 whitespace-nowrap"
+      >
+        📈 Analytics Center
+      </button>
+      <button
+        id="tab-btn-ledger"
+        onclick="switchTab('ledger')"
+        class="px-4 py-2 rounded-md text-sm font-semibold transition text-slate-400 hover:text-slate-100 whitespace-nowrap"
+      >
+        📋 Cohorts Ledger
+      </button>
+      <button
+        id="tab-btn-transposer"
+        onclick="switchTab('transposer')"
+        class="px-4 py-2 rounded-md text-sm font-semibold transition text-slate-400 hover:text-slate-100 whitespace-nowrap"
+      >
+        🔄 Master Transposer & Script
+      </button>
+      <button
+        id="tab-btn-uploader"
+        onclick="switchTab('uploader')"
+        class="px-4 py-2 rounded-md text-sm font-semibold transition text-slate-400 hover:text-slate-100 whitespace-nowrap"
+      >
+        📂 Uploader Workspace
+      </button>
+    </div>
+
+    <button 
+      onclick="downloadMasterLogCSV()"
+      class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3 rounded flex items-center gap-1.5 transition whitespace-nowrap"
+    >
+      <!-- Export SVG -->
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      Export Master Data Log
+    </button>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow p-6 max-w-7xl w-full mx-auto space-y-6">
+
+    <!-- METRIC CARD STRIP -->
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      
+      <!-- CARD 1 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Starting HC</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-starting-hc" class="text-3xl font-bold text-white">0</span>
+          <span class="text-xs text-slate-500">Trainees</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div class="h-full bg-blue-500 rounded-full" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 2 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Graduates</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-graduates" class="text-3xl font-bold text-emerald-400">0</span>
+          <span class="text-xs text-emerald-600">Passed</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-grad-progress" class="h-full bg-emerald-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 3 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Throughput Rate</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-throughput" class="text-3xl font-bold text-indigo-400">0%</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-throughput-progress" class="h-full bg-indigo-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 4 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Attrition Rate</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-attrition" class="text-3xl font-bold text-rose-500">0%</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-attrition-progress" class="h-full bg-rose-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 5 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Avg QA Score</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-qa" class="text-3xl font-bold text-yellow-500">0%</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-qa-progress" class="h-full bg-yellow-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 6 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Avg CSAT</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-csat" class="text-3xl font-bold text-orange-400">0%</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-csat-progress" class="h-full bg-orange-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WORKSPACE TABS VIEWPORT -->
+
+    <!-- VIEW 1: ANALYTICS CENTER -->
+    <div id="tab-view-analytics" class="tab-pane grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- LEFT SECTION: ACTIVE TRENDS OVER WAVE -->
+      <div class="lg:col-span-2 bg-slate-900 border
