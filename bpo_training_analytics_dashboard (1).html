@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BPO Training Analytics Portal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Custom Fonts & Tailwind Configuration -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar styles */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
+
+  <!-- HEADER SECTION -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <!-- SVG Icon -->
+        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.003 9.003 0 1020.945 13H11V3.055z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-white">BPO Training Analytics Portal</h1>
+        <p class="text-xs text-slate-400">Collaborative Cross-BPO Dashboard & Ledger Transposer</p>
+      </div>
+    </div>
+
+    <!-- SELECT BPO SITE TRIGGER -->
+    <div class="flex items-center gap-2">
+      <label for="site-select" class="text-xs text-slate-400 font-medium whitespace-nowrap">Active BPO Site:</label>
+      <select 
+        id="site-select" 
+        class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 font-semibold cursor-pointer outline-none"
+      >
+        <option value="TaskUs - Cali">TaskUs - Cali</option>
+        <option value="Atain - Cape Town">Atain - Cape Town</option>
+        <option value="TTEC - Duluth">TTEC - Duluth</option>
+        <option value="TTEC - Cairo">TTEC - Cairo</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- SUBNAV / WORKSPACE TAB SWITCHER -->
+  <div class="bg-slate-900 border-b border-slate-800 px-6 py-2 flex items-center justify-between overflow-x-auto">
+    <div class="flex space-x-1" role="tablist">
+      <button
+        id="tab-btn-analytics"
+        onclick="switchTab('analytics')"
+        class="px-4 py-2 rounded-md text-sm font-semibold transition bg-indigo-600/25 text-indigo-400 border border-indigo-500/30 whitespace-nowrap"
+      >
+        📈 Analytics Center
+      </button>
+      <button
+        id="tab-btn-ledger"
+        onclick="switchTab('ledger')"
+        class="px-4 py-2 rounded-md text-sm font-semibold transition text-slate-400 hover:text-slate-100 whitespace-nowrap"
+      >
+        📋 Cohorts Ledger
+      </button>
+      <button
+        id="tab-btn-transposer"
+        onclick="switchTab('transposer')"
+        class="px-4 py-2 rounded-md text-sm font-semibold transition text-slate-400 hover:text-slate-100 whitespace-nowrap"
+      >
+        🔄 Master Transposer & Script
+      </button>
+      <button
+        id="tab-btn-uploader"
+        onclick="switchTab('uploader')"
+        class="px-4 py-2 rounded-md text-sm font-semibold transition text-slate-400 hover:text-slate-100 whitespace-nowrap"
+      >
+        📂 Uploader Workspace
+      </button>
+    </div>
+
+    <button 
+      onclick="downloadMasterLogCSV()"
+      class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3 rounded flex items-center gap-1.5 transition whitespace-nowrap"
+    >
+      <!-- Export SVG -->
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      Export Master Data Log
+    </button>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow p-6 max-w-7xl w-full mx-auto space-y-6">
+
+    <!-- METRIC CARD STRIP -->
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      
+      <!-- CARD 1 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Starting HC</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-starting-hc" class="text-3xl font-bold text-white">0</span>
+          <span class="text-xs text-slate-500">Trainees</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div class="h-full bg-blue-500 rounded-full" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 2 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Graduates</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-graduates" class="text-3xl font-bold text-emerald-400">0</span>
+          <span class="text-xs text-emerald-600">Passed</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-grad-progress" class="h-full bg-emerald-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 3 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Throughput Rate</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-throughput" class="text-3xl font-bold text-indigo-400">0%</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-throughput-progress" class="h-full bg-indigo-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 4 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Attrition Rate</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-attrition" class="text-3xl font-bold text-rose-500">0%</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-attrition-progress" class="h-full bg-rose-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 5 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Avg QA Score</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-qa" class="text-3xl font-bold text-yellow-500">0%</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-qa-progress" class="h-full bg-yellow-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- CARD 6 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between shadow-md">
+        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Avg CSAT</span>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="metric-csat" class="text-3xl font-bold text-orange-400">0%</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-800 rounded-full mt-3 overflow-hidden">
+          <div id="metric-csat-progress" class="h-full bg-orange-500 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WORKSPACE TABS VIEWPORT -->
+
+    <!-- VIEW 1: ANALYTICS CENTER -->
+    <div id="tab-view-analytics" class="tab-pane grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- LEFT SECTION: ACTIVE TRENDS OVER WAVE -->
+      <div class="lg:col-span-2 bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-xl">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="font-bold text-slate-100">Quality & Throughput Trendlines</h3>
+            <p class="text-xs text-slate-400">Cohort performance metrics over active sequence wave indexes</p>
+          </div>
+          <div class="flex items-center gap-3 text-xs">
+            <div class="flex items-center gap-1.5">
+              <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span class="text-slate-300 font-medium">Throughput</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+              <span class="text-slate-300 font-medium">QA (AQA)</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="h-2 w-2 rounded-full bg-orange-500"></span>
+              <span class="text-slate-300 font-medium">CSAT</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div id="trendline-svg-container" class="relative w-full overflow-x-auto">
+            <!-- Dynamic SVG will be generated here -->
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-950 p-4 rounded-lg border border-slate-800">
+            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">BPO Support Roles</h4>
+            <div id="support-roles-tags" class="flex flex-wrap gap-2">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <div class="bg-slate-950 p-4 rounded-lg border border-slate-800">
+            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Primary Contacts</h4>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span class="text-slate-500 block">Ops Delivery</span>
+                <span id="meta-ops-delivery" class="font-medium text-slate-300">-</span>
+              </div>
+              <div>
+                <span class="text-slate-500 block">Training Manager</span>
+                <span id="meta-training-mgr" class="font-medium text-slate-300 truncate block">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SECTION: COHORT FUNNEL -->
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-xl">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="font-bold text-slate-100">Cohort Funnel Analysis</h3>
+            <p class="text-xs text-slate-400">Step-by-step training drop-out analysis</p>
+          </div>
+          <select 
+            id="funnel-wave-select" 
+            onchange="updateFunnelView()"
+            class="bg-slate-800 border border-slate-700 text-xs text-slate-100 rounded p-1 font-semibold outline-none cursor-pointer"
+          >
+            <!-- Rendered dynamically -->
+          </select>
+        </div>
+
+        <div id="funnel-bars-container" class="space-y-4">
+          <!-- Funnel Elements Rendered Dynamically -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VIEW 2: COHORTS LEDGER -->
+    <div id="tab-view-ledger" class="tab-pane hidden bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4 shadow-xl">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="font-bold text-slate-100">BPO Sequence Tabular Ledger</h3>
+          <p class="text-xs text-slate-400">Direct tabular list of sequenced historical training classes</p>
+        </div>
+        <button 
+          onclick="openAddWaveModal()"
+          class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-1.5 px-3 rounded flex items-center gap-1 transition shadow-lg shadow-indigo-500/10"
+        >
+          + Add Custom Wave Row
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 uppercase tracking-wider font-semibold">
+              <th class="py-3 px-2">Wave</th>
+              <th class="py-3 px-2">PT Start</th>
+              <th class="py-3 px-2">Ops Start</th>
+              <th class="py-3 px-2 text-center">Cal Wk</th>
+              <th class="py-3 px-2 text-center">Class Size</th>
+              <th class="py-3 px-2 text-center text-rose-400">Pre-Prod Attr</th>
+              <th class="py-3 px-2 text-center text-rose-400">Prod Attr</th>
+              <th class="py-3 px-2 text-center text-rose-400">Fail Delib</th>
+              <th class="py-3 px-2 text-center text-indigo-400">Ext Nest</th>
+              <th class="py-3 px-2 text-center text-emerald-400">Throughput %</th>
+              <th class="py-3 px-2 text-center">QA Score</th>
+              <th class="py-3 px-2 text-center">CSAT</th>
+            </tr>
+          </thead>
+          <tbody id="ledger-table-body" class="divide-y divide-slate-800/60 font-medium">
+            <!-- Rendered Dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW 3: TRANSPOSER WORKSPACE -->
+    <div id="tab-view-transposer" class="tab-pane hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- LIVE PREVIEW TRANSPOSER LEDGER -->
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-xl">
+        <div>
+          <h3 class="font-bold text-slate-100">Live Row-to-Column Database Preview</h3>
+          <p class="text-xs text-slate-400">Previewing how the script normalizes horizontal vendor columns to vertical table rows</p>
+        </div>
+
+        <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 max-h-[360px] overflow-y-auto">
+          <table class="w-full text-[10px] text-left">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-500 font-bold uppercase tracking-wider">
+                <th class="py-2">Row ID (Wave)</th>
+                <th class="py-2">PT Start</th>
+                <th class="py-2">Ops Start</th>
+                <th class="py-2 text-right">Intake HC</th>
+                <th class="py-2 text-right">Throughput</th>
+              </tr>
+            </thead>
+            <tbody id="transposer-table-body">
+              <!-- Rendered Dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-indigo-950/20 border border-indigo-900/40 p-4 rounded-xl flex items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h4 class="text-xs font-bold text-indigo-300">Ready to feed Google Sheets?</h4>
+            <p class="text-[10px] text-slate-400 max-w-sm">This preview matches the vertical Google Sheets database format, ready to be exported directly.</p>
+          </div>
+          <button 
+            onclick="downloadMasterLogCSV()"
+            class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 px-3 rounded shadow-lg shadow-indigo-500/20 transition shrink-0"
+          >
+            Download Compiled CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- SCRIPT CONFIGURATION MODULE -->
+      <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-xl">
+        <div>
+          <h3 class="font-bold text-slate-100">Google Apps Script Synchronizer</h3>
+          <p class="text-xs text-slate-400">Install this backend script inside your sheets manager to automate synchronization.</p>
+        </div>
+
+        <div class="space-y-3">
+          <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 relative">
+            <span class="absolute top-2 right-2 text-[9px] bg-indigo-900 text-indigo-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider mono">Apps Script</span>
+            <pre class="text-[10px] text-slate-300 font-mono overflow-x-auto max-h-[160px] mono">
+function syncBPOData() {
+  const masterSs = SpreadsheetApp.getActiveSpreadsheet();
+  const destSheet = masterSs.getSheetByName("Master_Data_Log");
+  
+  // Dynamic Map over BPO Configurations
+  BPO_CONFIGS.forEach(bpo => {
+    const sourceSs = SpreadsheetApp.openById(bpo.spreadsheetId);
+    const sourceSheet = sourceSs.getSheetByName(bpo.sourceTab);
+    // Transposes columns to master ledger lines...
+  });
+}
+            </pre>
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <h4 class="font-bold text-slate-200">Deployment Guide:</h4>
+            <ol class="list-decimal pl-4 text-slate-400 space-y-1.5">
+              <li>Open your Google Sheet Master Dashboard.</li>
+              <li>Navigate to <span class="text-white font-semibold">Extensions &gt; Apps Script</span>.</li>
+              <li>Copy the script provided in your Google Sheets automation SOP and paste it.</li>
+              <li>Click the Clock icon (⏰ Triggers) on the left panel, and set a time-based trigger for <span class="text-white font-semibold">Midnight Daily</span>.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VIEW 4: UPLOADER WORKSPACE -->
+    <div id="tab-view-uploader" class="tab-pane hidden bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-2xl mx-auto space-y-6 shadow-xl">
+      <div class="text-center space-y-1">
+        <h3 class="font-bold text-lg text-slate-100">Upload Source CSV Data Sheet</h3>
+        <p class="text-xs text-slate-400">Drag & drop or click to upload horizontal BPO spreadsheets into your dashboard memory</p>
+      </div>
+
+      <!-- DRAG AND DROP ZONE -->
+      <div 
+        id="drop-zone"
+        class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl bg-slate-950/45 p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition group"
+      >
+        <div class="h-12 w-12 rounded-full bg-slate-900 group-hover:bg-indigo-950/40 flex items-center justify-center border border-slate-800 group-hover:border-indigo-800 transition">
+          <svg class="h-6 w-6 text-slate-400 group-hover:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+        </div>
+        <div class="text-center">
+          <span class="text-sm font-semibold text-indigo-400 group-hover:text-indigo-300">Click to upload file</span>
+          <p class="text-xs text-slate-500 mt-1">Accepts CSV files with Wave columns</p>
+        </div>
+        <input 
+          type="file" 
+          id="csv-file-input"
+          accept=".csv" 
+          class="hidden" 
+        />
+      </div>
+
+      <!-- Feedback notifications -->
+      <div id="parser-error" class="hidden bg-rose-950/30 border border-rose-900/50 text-rose-400 p-3 rounded-lg text-xs font-semibold"></div>
+      <div id="parser-success" class="hidden bg-emerald-950/30 border border-emerald-900/50 text-emerald-400 p-3 rounded-lg text-xs font-semibold"></div>
+
+      <div class="bg-slate-950 border border-slate-800 rounded-lg p-4 space-y-2">
+        <h4 class="text-xs font-bold text-slate-300">Upload Standard Criteria Checklist:</h4>
+        <ul class="list-disc pl-4 text-xs text-slate-500 space-y-1">
+          <li>Make sure Row 1 lists the column Waves (e.g. Row Key: <span class="text-slate-300">Wave, 22, 23, 24...</span>).</li>
+          <li>Row labels must include exact or close matches to <span class="text-slate-300">"Starting Headcount"</span>, <span class="text-slate-300">"Throughput %"</span>, <span class="text-slate-300">"QA (AQA)"</span>, etc.</li>
+          <li>Empty spacer columns (like year tags '2026') will be handled and ignored dynamically.</li>
+        </ul>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ADD CUSTOM WAVE ROW DIALOG (MODAL) -->
+  <div id="add-wave-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+        <h3 class="font-bold text-slate-100">Add Custom Wave Sequence</h3>
+        <button onclick="closeAddWaveModal()" class="text-slate-400 hover:text-slate-100 text-lg">&times;</button>
+      </div>
+      <div class="px-6 py-4 space-y-4 flex-grow overflow-y-auto max-h-[70vh]">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Wave ID / Number *</label>
+            <input id="modal-wave-id" type="text" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" placeholder="e.g. 37">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Calendar Week</label>
+            <input id="modal-cal-week" type="number" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" placeholder="e.g. 26">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Product Training Start Date</label>
+            <input id="modal-pt-start" type="text" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" placeholder="e.g. 06/22">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Production Start Date</label>
+            <input id="modal-ops-start" type="text" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" placeholder="e.g. 07/13">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3 border-t border-slate-800/80 pt-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Starting Headcount</label>
+            <input id="modal-hc" type="number" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" value="0">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Pre-Product Attrition</label>
+            <input id="modal-attr-pre" type="number" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" value="0">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Product Attrition</label>
+            <input id="modal-attr-prod" type="number" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" value="0">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Failed Deliberation</label>
+            <input id="modal-attr-fail-delib" type="number" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" value="0">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Entered Nesting</label>
+            <input id="modal-ext-nest" type="number" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" value="0">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Failed Nesting Attr</label>
+            <input id="modal-attr-fail-nest" type="number" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" value="0">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3 border-t border-slate-800/80 pt-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">QA Score (%)</label>
+            <input id="modal-qa" type="number" step="0.1" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" value="0">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">CSAT (%)</label>
+            <input id="modal-csat" type="number" step="0.1" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" value="0">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Assessment (%)</label>
+            <input id="modal-score" type="number" step="0.1" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-sm text-slate-100 outline-none focus:border-indigo-500" value="0">
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 bg-slate-950 border-t border-slate-800 flex justify-end gap-2">
+        <button onclick="closeAddWaveModal()" class="px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">Cancel</button>
+        <button onclick="submitAddWaveForm()" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition">Save Wave Row</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 bg-slate-900/40 text-slate-500 text-center py-4 text-xs">
+    BPO Training Metrics Dashboard &copy; 2026. All operations confidential.
+  </footer>
+
+  <!-- CORE JAVASCRIPT STATE CONTROLLER -->
+  <script>
+    // ==========================================
+    // PRELOADED AUTHENTIC DATASETS FROM CSV FILES
+    // ==========================================
+    const INITIAL_DATASETS = {
+      "TaskUs - Cali": [
+        { wave: "22", prodStart: "10/14", opsStart: "11/04", calWeek: 42, hc: 23, attrPre: 1, attrProd: 1, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 85.7, csat: 72.7, score: 83.9 },
+        { wave: "23", prodStart: "10/14", opsStart: "11/04", calWeek: 42, hc: 14, attrPre: 1, attrProd: 5, attrFailDelib: 0, extNest: 0, attrFailNest: 0, qa: 76.0, csat: 78.0, score: 90.85 },
+        { wave: "24", prodStart: "10/28", opsStart: "11/18", calWeek: 44, hc: 13, attrPre: 0, attrProd: 1, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 80.0, csat: 75.0, score: 85.0 },
+        { wave: "25", prodStart: "11/04", opsStart: "11/25", calWeek: 45, hc: 22, attrPre: 0, attrProd: 1, attrFailDelib: 0, extNest: 2, attrFailNest: 0, qa: 82.0, csat: 74.0, score: 88.0 },
+        { wave: "26", prodStart: "04/14", opsStart: "05/05", calWeek: 16, hc: 9,  attrPre: 2, attrProd: 1, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 84.0, csat: 71.0, score: 82.0 },
+        { wave: "27", prodStart: "07/14", opsStart: "08/04", calWeek: 29, hc: 14, attrPre: 1, attrProd: 1, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 86.0, csat: 73.0, score: 84.0 },
+        { wave: "28", prodStart: "08/04", opsStart: "08/25", calWeek: 32, hc: 12, attrPre: 0, attrProd: 2, attrFailDelib: 0, extNest: 0, attrFailNest: 0, qa: 85.0, csat: 72.0, score: 83.0 },
+        { wave: "29", prodStart: "08/25", opsStart: "09/15", calWeek: 35, hc: 20, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 2, attrFailNest: 0, qa: 88.0, csat: 76.0, score: 86.0 },
+        { wave: "30", prodStart: "09/15", opsStart: "10/06", calWeek: 38, hc: 16, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 87.0, csat: 75.0, score: 85.0 },
+        { wave: "31", prodStart: "09/22", opsStart: "10/13", calWeek: 39, hc: 16, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 2, attrFailNest: 0, qa: 89.0, csat: 77.0, score: 87.0 },
+        { wave: "32", prodStart: "10/27", opsStart: "11/17", calWeek: 44, hc: 7,  attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 0, attrFailNest: 0, qa: 90.0, csat: 79.0, score: 89.0 },
+        { wave: "33", prodStart: "02/23", opsStart: "03/16", calWeek: 9,  hc: 15, attrPre: 1, attrProd: 1, attrFailDelib: 0, extNest: 2, attrFailNest: 0, qa: 83.0, csat: 70.0, score: 81.0 },
+        { wave: "34", prodStart: "04/06", opsStart: "04/27", calWeek: 15, hc: 23, attrPre: 1, attrProd: 2, attrFailDelib: 0, extNest: 3, attrFailNest: 0, qa: 85.0, csat: 73.0, score: 84.0 },
+        { wave: "35", prodStart: "05/04", opsStart: "05/25", calWeek: 19, hc: 8,  attrPre: 0, attrProd: 1, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 86.0, csat: 74.0, score: 85.0 },
+        { wave: "36", prodStart: "06/22", opsStart: "07/13", calWeek: 26, hc: 17, attrPre: 2, attrProd: 3, attrFailDelib: 0, extNest: 2, attrFailNest: 0, qa: 81.0, csat: 72.0, score: 80.0 }
+      ],
+      "Atain - Cape Town": [
+        { wave: "11", prodStart: "11/25", opsStart: "12/16", calWeek: 48, hc: 18, attrPre: 2, attrProd: 0, attrFailDelib: 0, extNest: 3, attrFailNest: 0, qa: 79.4, csat: 66.9, score: 94.0 },
+        { wave: "12", prodStart: "03/10", opsStart: "03/31", calWeek: 11, hc: 18, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 4, attrFailNest: 0, qa: 76.0, csat: 63.0, score: 93.7 },
+        { wave: "13", prodStart: "03/24", opsStart: "04/14", calWeek: 13, hc: 19, attrPre: 0, attrProd: 2, attrFailDelib: 0, extNest: 3, attrFailNest: 0, qa: 77.0, csat: 71.0, score: 94.0 },
+        { wave: "14", prodStart: "04/21", opsStart: "05/12", calWeek: 17, hc: 18, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 3, attrFailNest: 0, qa: 78.5, csat: 68.0, score: 95.1 },
+        { wave: "15", prodStart: "05/19", opsStart: "06/09", calWeek: 21, hc: 18, attrPre: 0, attrProd: 3, attrFailDelib: 0, extNest: 2, attrFailNest: 0, qa: 81.2, csat: 70.4, score: 96.2 },
+        { wave: "16", prodStart: "06/30", opsStart: "07/21", calWeek: 27, hc: 18, attrPre: 0, attrProd: 1, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 79.8, csat: 69.1, score: 95.5 },
+        { wave: "17", prodStart: "08/04", opsStart: "08/25", calWeek: 32, hc: 13, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 82.0, csat: 72.0, score: 96.1 },
+        { wave: "18", prodStart: "08/25", opsStart: "09/15", calWeek: 35, hc: 20, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 2, attrFailNest: 0, qa: 83.5, csat: 73.0, score: 97.0 },
+        { wave: "19", prodStart: "09/15", opsStart: "10/09", calWeek: 38, hc: 20, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 84.0, csat: 74.0, score: 97.2 },
+        { wave: "20", prodStart: "10/27", opsStart: "11/16", calWeek: 44, hc: 16, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 0, attrFailNest: 0, qa: 85.0, csat: 75.0, score: 97.5 }
+      ],
+      "TTEC - Duluth": [
+        { wave: "1", prodStart: "05/27", opsStart: "06/16", calWeek: 22, hc: 22, attrPre: 0, attrProd: 3, attrFailDelib: 2, extNest: 3, attrFailNest: 0, qa: 82.0, csat: 70.0, score: 88.0 },
+        { wave: "2", prodStart: "07/07", opsStart: "07/28", calWeek: 28, hc: 17, attrPre: 1, attrProd: 6, attrFailDelib: 0, extNest: 0, attrFailNest: 0, qa: 81.0, csat: 74.0, score: 85.0 },
+        { wave: "3", prodStart: "08/11", opsStart: "09/01", calWeek: 33, hc: 7,  attrPre: 2, attrProd: 1, attrFailDelib: 1, extNest: 0, attrFailNest: 0, qa: 83.0, csat: 75.0, score: 86.0 },
+        { wave: "4", prodStart: "09/15", opsStart: "10/06", calWeek: 38, hc: 10, attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 0, attrFailNest: 0, qa: 85.0, csat: 78.0, score: 89.0 },
+        { wave: "5", prodStart: "12/08", opsStart: "12/30", calWeek: 50, hc: 9,  attrPre: 0, attrProd: 0, attrFailDelib: 0, extNest: 0, attrFailNest: 0, qa: 86.0, csat: 79.0, score: 90.0 },
+        { wave: "6", prodStart: "03/23", opsStart: "04/13", calWeek: 13, hc: 6,  attrPre: 0, attrProd: 1, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 84.5, csat: 71.5, score: 87.5 }
+      ],
+      "TTEC - Cairo": [
+        { wave: "8.5", prodStart: "10/21", opsStart: "11/11", calWeek: 43, hc: 24, attrPre: 10, attrProd: 5, attrFailDelib: 0, extNest: 2, attrFailNest: 0, qa: 74.0, csat: 62.0, score: 80.0 },
+        { wave: "9",   prodStart: "11/04", opsStart: "11/25", calWeek: 45, hc: 30, attrPre: 11, attrProd: 6, attrFailDelib: 0, extNest: 0, attrFailNest: 0, qa: 76.0, csat: 64.0, score: 82.0 },
+        { wave: "9.5", prodStart: "11/18", opsStart: "12/09", calWeek: 47, hc: 32, attrPre: 13, attrProd: 1, attrFailDelib: 0, extNest: 6, attrFailNest: 0, qa: 78.0, csat: 65.0, score: 84.0 },
+        { wave: "10",  prodStart: "12/02", opsStart: "12/23", calWeek: 49, hc: 32, attrPre: 6,  attrProd: 0, attrFailDelib: 0, extNest: 1, attrFailNest: 0, qa: 80.0, csat: 68.0, score: 85.0 },
+        { wave: "11",  prodStart: "12/16", opsStart: "01/06", calWeek: 51, hc: 11, attrPre: 4,  attrProd: 1, attrFailDelib: 1, extNest: 0, attrFailNest: 0, qa: 81.0, csat: 70.0, score: 86.0 }
+      ]
+    };
+
+    const BPO_METADATA = {
+      "TaskUs - Cali": {
+        manager: "alejandro.munoz@taskus.com",
+        facilitator: "Tyler Grandberry",
+        trainers: ["Alejandro Ruiz (Senior)", "Johan Torres"],
+        qaLead: "Amalia Robles",
+        opsDelivery: "Kaylee Mickelson",
+        roles: ["Customer Advocate - CA", "Customer Solutions Technician - CST", "Card Services Agent"]
+      },
+      "Atain - Cape Town": {
+        manager: "mahesh.naicker@igtsolutions.com",
+        facilitator: "Tyler Grandberry",
+        trainers: ["Aviwe Mdinga", "Anathi Gamzana", "Mogamat Abdullatief"],
+        qaLead: "Hannah Johnson",
+        opsDelivery: "Amanda Reed",
+        roles: ["Customer Advocate - CA", "Customer Solutions Technician - CST", "Card Services Agent", "Client Support Analyst"]
+      },
+      "TTEC - Duluth": {
+        manager: "Tiffany Hostler",
+        facilitator: "Celene Arvizu",
+        trainers: ["Nicole Lampkin", "Jamayah Roberts", "Kareem Mayo"],
+        qaLead: "Sunny Vuong",
+        opsDelivery: "Jennifer Snook",
+        roles: ["Customer Advocate - CA", "Customer Solutions Technician - CST", "Card Services Agent"]
+      },
+      "TTEC - Cairo": {
+        manager: "Khaled Quniby",
+        facilitator: "Celene Arvizu",
+        trainers: ["Mohamed Shalapy (Senior)", "Mai Soliman", "Heba Mohamadeen"],
+        qaLead: "Paul Story",
+        opsDelivery: "Jennifer Snook",
+        roles: ["Customer Advocate - CA", "Customer Solutions Technician - CST", "Card Services Agent"]
+      }
+    };
+
+    // ==========================================
+    // PORTAL LOCAL STATE
+    // ==========================================
+    let datasets = JSON.parse(JSON.stringify(INITIAL_DATASETS));
+    let selectedSite = "TaskUs - Cali";
+    let activeTab = "analytics";
+    let selectedWaveId = "";
+
+    // DOM Elements Cache
+    const siteSelect = document.getElementById("site-select");
+    const funnelWaveSelect = document.getElementById("funnel-wave-select");
+    const fileInput = document.getElementById("csv-file-input");
+    const dropZone = document.getElementById("drop-zone");
+
+    // ==========================================
+    // INITIALIZATION & LIFECYCLE
+    // ==========================================
+    window.addEventListener("DOMContentLoaded", () => {
+      initEventListeners();
+      syncPortal();
+    });
+
+    function initEventListeners() {
+      // Site switcher
+      siteSelect.addEventListener("change", (e) => {
+        selectedSite = e.target.value;
+        const currentData = datasets[selectedSite] || [];
+        if (currentData.length > 0) {
+          selectedWaveId = currentData[0].wave;
+        } else {
+          selectedWaveId = "";
+        }
+        syncPortal();
+      });
+
+      // Uploader events
+      fileInput.addEventListener("change", handleCSVUpload);
+      
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("border-indigo-500", "bg-slate-900/60");
+      });
+
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("border-indigo-500", "bg-slate-900/60");
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("border-indigo-500", "bg-slate-900/60");
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          processCSVFile(file);
+        }
+      });
+    }
+
+    // Main sync engine triggers recalculations and redraws
+    function syncPortal() {
+      calculateAggregates();
+      populateWaveSelect();
+      renderTrends();
+      renderMetadata();
+      renderFunnel();
+      renderLedger();
+      renderTransposerPreview();
+    }
+
+    // ==========================================
+    // AGGREGATION & CALCULATION LAYER
+    // ==========================================
+    function calculateAggregates() {
+      const activeSiteData = datasets[selectedSite] || [];
+      
+      let totalStartingHC = 0;
+      let totalGraduates = 0;
+      let totalPreProdAttr = 0;
+      let totalProdAttr = 0;
+      let totalFailDelibAttr = 0;
+      let totalFailNestAttr = 0;
+      let sumQA = 0;
+      let sumCSAT = 0;
+      let validQACount = 0;
+      let validCSATCount = 0;
+
+      activeSiteData.forEach(item => {
+        totalStartingHC += Number(item.hc || 0);
+        let grads = Number(item.hc || 0) - (Number(item.attrPre || 0) + Number(item.attrProd || 0) + Number(item.attrFailDelib || 0) + Number(item.attrFailNest || 0));
+        totalGraduates += Math.max(0, grads);
+        
+        totalPreProdAttr += Number(item.attrPre || 0);
+        totalProdAttr += Number(item.attrProd || 0);
+        totalFailDelibAttr += Number(item.attrFailDelib || 0);
+        totalFailNestAttr += Number(item.attrFailNest || 0);
+
+        if (item.qa) { sumQA += Number(item.qa); validQACount++; }
+        if (item.csat) { sumCSAT += Number(item.csat); validCSATCount++; }
+      });
+
+      const overallThroughput = totalStartingHC > 0 ? (totalGraduates / totalStartingHC) * 100 : 0;
+      const overallAttritionRate = totalStartingHC > 0 ? ((totalPreProdAttr + totalProdAttr + totalFailDelibAttr + totalFailNestAttr) / totalStartingHC) * 100 : 0;
+      
+      const avgQA = validQACount > 0 ? (sumQA / validQACount).toFixed(1) : "N/A";
+      const avgCSAT = validCSATCount > 0 ? (sumCSAT / validCSATCount).toFixed(1) : "N/A";
+
+      // Update Top Cards DOM
+      document.getElementById("metric-starting-hc").textContent = totalStartingHC;
+      document.getElementById("metric-graduates").textContent = totalGraduates;
+      
+      const gradProgress = document.getElementById("metric-grad-progress");
+      gradProgress.style.width = `${overallThroughput}%`;
+      
+      document.getElementById("metric-throughput").textContent = `${overallThroughput.toFixed(1)}%`;
+      document.getElementById("metric-throughput-progress").style.width = `${overallThroughput}%`;
+      
+      document.getElementById("metric-attrition").textContent = `${overallAttritionRate.toFixed(1)}%`;
+      document.getElementById("metric-attrition-progress").style.width = `${overallAttritionRate}%`;
+      
+      document.getElementById("metric-qa").textContent = avgQA !== "N/A" ? `${avgQA}%` : "0%";
+      document.getElementById("metric-qa-progress").style.width = avgQA !== "N/A" ? `${avgQA}%` : "0%";
+      
+      document.getElementById("metric-csat").textContent = avgCSAT !== "N/A" ? `${avgCSAT}%` : "0%";
+      document.getElementById("metric-csat-progress").style.width = avgCSAT !== "N/A" ? `${avgCSAT}%` : "0%";
+    }
+
+    // ==========================================
+    // METADATA LAYER
+    // ==========================================
+    function renderMetadata() {
+      const activeMetadata = BPO_METADATA[selectedSite] || {};
+      
+      // Update Support Roles
+      const rolesContainer = document.getElementById("support-roles-tags");
+      rolesContainer.innerHTML = "";
+      if (activeMetadata.roles) {
+        activeMetadata.roles.forEach(role => {
+          const badge = document.createElement("span");
+          badge.className = "bg-indigo-950/40 text-indigo-400 border border-indigo-900/40 text-[10px] px-2 py-1 rounded font-medium";
+          badge.textContent = role;
+          rolesContainer.appendChild(badge);
+        });
+      }
+
+      // Update Contacts
+      document.getElementById("meta-ops-delivery").textContent = activeMetadata.opsDelivery || "N/A";
+      document.getElementById("meta-training-mgr").textContent = activeMetadata.manager || "N/A";
+      document.getElementById("meta-training-mgr").title = activeMetadata.manager || "";
+    }
+
+    // ==========================================
+    // INTERACTIVE TRENDS (SVG CONSTRUCTOR)
+    // ==========================================
+    function renderTrends() {
+      const activeSiteData = datasets[selectedSite] || [];
+      const container = document.getElementById("trendline-svg-container");
+      container.innerHTML = "";
+
+      if (activeSiteData.length < 2) {
+        container.innerHTML = `<p class="text-slate-400 italic text-sm text-center py-8">Not enough cohort sequence points to map trendlines.</p>`;
+        return;
+      }
+
+      const width = 600;
+      const height = 150;
+      const padding = 25;
+      
+      const pointsCount = activeSiteData.length;
+      const stepX = (width - padding * 2) / (pointsCount - 1 || 1);
+      
+      const scaleY = (val) => {
+        let numeric = Number(val) || 0;
+        return height - padding - (numeric / 100) * (height - padding * 2);
+      };
+
+      let qaPoints = [];
+      let csatPoints = [];
+      let throughputPoints = [];
+
+      activeSiteData.forEach((item, index) => {
+        let x = padding + index * stepX;
+        
+        // QA
+        if (item.qa) qaPoints.push(`${x},${scaleY(item.qa)}`);
+        
+        // CSAT
+        if (item.csat) csatPoints.push(`${x},${scaleY(item.csat)}`);
+        
+        // Throughput
+        let grads = item.hc - (item.attrPre + item.attrProd + item.attrFailDelib + item.attrFailNest);
+        let pct = item.hc > 0 ? (grads / item.hc) * 100 : 0;
+        throughputPoints.push(`${x},${scaleY(pct)}`);
+      });
+
+      // Construct inline SVG
+      let svgContent = `
+        <svg viewBox="0 0 ${width} ${height}" class="w-full h-44 min-w-[500px]">
+          <!-- Grid lines -->
+          <line x1="${padding}" y1="${scaleY(100)}" x2="${width - padding}" y2="${scaleY(100)}" stroke="#334155" stroke-dasharray="3,3" />
+          <line x1="${padding}" y1="${scaleY(75)}" x2="${width - padding}" y2="${scaleY(75)}" stroke="#1e293b" />
+          <line x1="${padding}" y1="${scaleY(50)}" x2="${width - padding}" y2="${scaleY(50)}" stroke="#1e293b" />
+          <line x1="${padding}" y1="${scaleY(0)}" x2="${width - padding}" y2="${scaleY(0)}" stroke="#334155" />
+
+          <!-- Axes labels -->
+          <text x="${padding - 5}" y="${scaleY(100) + 3}" fill="#64748b" font-size="8" text-anchor="end">100%</text>
+          <text x="${padding - 5}" y="${scaleY(75) + 3}" fill="#64748b" font-size="8" text-anchor="end">75%</text>
+          <text x="${padding - 5}" y="${scaleY(50) + 3}" fill="#64748b" font-size="8" text-anchor="end">50%</text>
+
+          <!-- Paths -->
+          ${throughputPoints.length > 0 ? `<polyline fill="none" stroke="#10b981" stroke-width="3" points="${throughputPoints.join(' ')}" />` : ''}
+          ${qaPoints.length > 0 ? `<polyline fill="none" stroke="#6366f1" stroke-width="2.5" points="${qaPoints.join(' ')}" stroke-dasharray="2,1" />` : ''}
+          ${csatPoints.length > 0 ? `<polyline fill="none" stroke="#f59e0b" stroke-width="2" points="${csatPoints.join(' ')}" />` : ''}
+      `;
+
+      // Dots and Hover Labels
+      activeSiteData.forEach((item, index) => {
+        let x = padding + index * stepX;
+        let grads = item.hc - (item.attrPre + item.attrProd + item.attrFailDelib + item.attrFailNest);
+        let pct = item.hc > 0 ? (grads / item.hc) * 100 : 0;
+        
+        svgContent += `
+          <g class="cursor-pointer">
+            <circle cx="${x}" cy="${scaleY(pct)}" r="4" fill="#10b981" />
+            <circle cx="${x}" cy="${scaleY(item.qa)}" r="3" fill="#6366f1" />
+            <circle cx="${x}" cy="${scaleY(item.csat)}" r="3" fill="#f59e0b" />
+            
+            <!-- X-Axis Labels -->
+            <text x="${x}" y="${height - 5}" fill="#94a3b8" font-size="8" text-anchor="middle">W${item.wave}</text>
+            <title>Wave ${item.wave}&#10;Throughput: ${pct.toFixed(1)}%&#10;QA: ${item.qa || 0}%&#10;CSAT: ${item.csat || 0}%</title>
+          </g>
+        `;
+      });
+
+      svgContent += `</svg>`;
+      container.innerHTML = svgContent;
+    }
+
+    // ==========================================
+    // DYNAMIC FUNNEL RENDERER
+    // ==========================================
+    function populateWaveSelect() {
+      const activeSiteData = datasets[selectedSite] || [];
+      funnelWaveSelect.innerHTML = "";
+      
+      activeSiteData.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.wave;
+        option.textContent = `Wave ${item.wave}`;
+        funnelWaveSelect.appendChild(option);
+      });
+
+      if (activeSiteData.length > 0 && !selectedWaveId) {
+        selectedWaveId = activeSiteData[0].wave;
+      }
+      funnelWaveSelect.value = selectedWaveId;
+    }
+
+    function updateFunnelView() {
+      selectedWaveId = funnelWaveSelect.value;
+      renderFunnel();
+    }
+
+    function renderFunnel() {
+      const activeSiteData = datasets[selectedSite] || [];
+      const container = document.getElementById("funnel-bars-container");
+      container.innerHTML = "";
+
+      const currentWaveObj = activeSiteData.find(w => w.wave === selectedWaveId) || activeSiteData[0];
+      
+      if (!currentWaveObj) {
+        container.innerHTML = `<p class="text-slate-500 italic text-xs py-8 text-center">Select or upload wave data to map cohorts.</p>`;
+        return;
+      }
+
+      const hc = currentWaveObj.hc;
+      const survivingPre = Math.max(0, hc - currentWaveObj.attrPre);
+      const survivingProd = Math.max(0, survivingPre - currentWaveObj.attrProd);
+      const survivingDelib = Math.max(0, survivingProd - currentWaveObj.attrFailDelib);
+      const grads = Math.max(0, survivingDelib - currentWaveObj.attrFailNest);
+      
+      const getPercent = (val) => hc > 0 ? ((val / hc) * 100).toFixed(0) : 0;
+
+      container.innerHTML = `
+        <!-- STEP 1 -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs font-semibold">
+            <span class="text-slate-300">1. Classroom Intake</span>
+            <span class="text-white">${hc} Agents (${getPercent(hc)}%)</span>
+          </div>
+          <div class="h-6 w-full bg-slate-950 rounded border border-slate-800 overflow-hidden relative flex items-center px-2">
+            <div class="h-full bg-blue-600/35 absolute left-0 top-0" style="width: 100%"></div>
+            <span class="z-10 text-[10px] font-bold text-blue-300">Active classroom starts</span>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs font-semibold">
+            <span class="text-slate-300">2. Passed Pre-Product</span>
+            <span class="text-white">${survivingPre} Agents (${getPercent(survivingPre)}%)</span>
+          </div>
+          <div class="h-6 w-full bg-slate-950 rounded border border-slate-800 overflow-hidden relative flex items-center justify-between px-2">
+            <div class="h-full bg-violet-600/35 absolute left-0 top-0" style="width: ${getPercent(survivingPre)}%"></div>
+            <span class="z-10 text-[10px] font-bold text-violet-300">Surviving Classroom</span>
+            <span class="z-10 text-[10px] text-rose-400 font-semibold">-${currentWaveObj.attrPre} Leaked</span>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs font-semibold">
+            <span class="text-slate-300">3. Passed Product Training</span>
+            <span class="text-white">${survivingProd} Agents (${getPercent(survivingProd)}%)</span>
+          </div>
+          <div class="h-6 w-full bg-slate-950 rounded border border-slate-800 overflow-hidden relative flex items-center justify-between px-2">
+            <div class="h-full bg-indigo-600/35 absolute left-0 top-0" style="width: ${getPercent(survivingProd)}%"></div>
+            <span class="z-10 text-[10px] font-bold text-indigo-300">Surviving Product Core</span>
+            <span class="z-10 text-[10px] text-rose-400 font-semibold">-${currentWaveObj.attrProd} Leaked</span>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs font-semibold">
+            <span class="text-slate-300">4. Passed Calibration/Delib</span>
+            <span class="text-white">${survivingDelib} Agents (${getPercent(survivingDelib)}%)</span>
+          </div>
+          <div class="h-6 w-full bg-slate-950 rounded border border-slate-800 overflow-hidden relative flex items-center justify-between px-2">
+            <div class="h-full bg-amber-600/25 absolute left-0 top-0" style="width: ${getPercent(survivingDelib)}%"></div>
+            <span class="z-10 text-[10px] font-bold text-amber-300">Pre-nesting ready</span>
+            <span class="z-10 text-[10px] text-rose-400 font-semibold">-${currentWaveObj.attrFailDelib} Leaked</span>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs font-semibold">
+            <span class="text-emerald-400">5. Signed Production Grads</span>
+            <span class="text-emerald-400 font-bold">${grads} Agents (${getPercent(grads)}%)</span>
+          </div>
+          <div class="h-6 w-full bg-slate-950 rounded border border-slate-800 overflow-hidden relative flex items-center justify-between px-2">
+            <div class="h-full bg-emerald-600/35 absolute left-0 top-0" style="width: ${getPercent(grads)}%"></div>
+            <span class="z-10 text-[10px] font-bold text-emerald-300">Total Certified</span>
+            <span class="z-10 text-[10px] text-rose-400 font-semibold">-${currentWaveObj.attrFailNest} Nest Attrition</span>
+          </div>
+        </div>
+
+        <!-- Metric Card Bottom block -->
+        <div class="border-t border-slate-800 pt-3 mt-4 grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-slate-950 p-2.5 rounded border border-slate-800 shadow-inner">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Extended Nesting Count</span>
+            <span class="text-sm font-bold text-white mt-1 block">${currentWaveObj.extNest} Agents</span>
+          </div>
+          <div class="bg-slate-950 p-2.5 rounded border border-slate-800 shadow-inner">
+            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Final CSAT Performance</span>
+            <span class="text-sm font-bold text-orange-400 mt-1 block">${currentWaveObj.csat ? `${currentWaveObj.csat}%` : "N/A"}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // TABULAR LEDGER LAYER
+    // ==========================================
+    function renderLedger() {
+      const activeSiteData = datasets[selectedSite] || [];
+      const tbody = document.getElementById("ledger-table-body");
+      tbody.innerHTML = "";
+
+      activeSiteData.forEach((item, index) => {
+        let grads = item.hc - (item.attrPre + item.attrProd + item.attrFailDelib + item.attrFailNest);
+        let throughputVal = item.hc > 0 ? ((grads / item.hc) * 100).toFixed(1) : "0.0";
+        
+        const row = document.createElement("tr");
+        row.className = "hover:bg-slate-800/40 text-slate-300 border-b border-slate-800/55";
+        row.innerHTML = `
+          <td class="py-3 px-2 text-white font-bold">W${item.wave}</td>
+          <td class="py-3 px-2">${item.prodStart}</td>
+          <td class="py-3 px-2">${item.opsStart}</td>
+          <td class="py-3 px-2 text-center">${item.calWeek}</td>
+          <td class="py-3 px-2 text-center text-white font-semibold">${item.hc}</td>
+          <td class="py-3 px-2 text-center text-rose-400/80">${item.attrPre}</td>
+          <td class="py-3 px-2 text-center text-rose-400/80">${item.attrProd}</td>
+          <td class="py-3 px-2 text-center text-rose-400/80">${item.attrFailDelib}</td>
+          <td class="py-3 px-2 text-center text-indigo-300">${item.extNest}</td>
+          <td class="py-3 px-2 text-center">
+            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${Number(throughputVal) >= 90 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/50' : 'bg-slate-950 text-slate-300 border border-slate-800/50'}">
+              ${throughputVal}%
+            </span>
+          </td>
+          <td class="py-3 px-2 text-center text-yellow-500 font-bold">${item.qa ? `${item.qa}%` : "N/A"}</td>
+          <td class="py-3 px-2 text-center text-orange-400 font-bold">${item.csat ? `${item.csat}%` : "N/A"}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ==========================================
+    // DATABASE / TRANSPOSER PREVIEW
+    // ==========================================
+    function renderTransposerPreview() {
+      const activeSiteData = datasets[selectedSite] || [];
+      const tbody = document.getElementById("transposer-table-body");
+      tbody.innerHTML = "";
+
+      activeSiteData.forEach((item, index) => {
+        let grads = item.hc - (item.attrPre + item.attrProd + item.attrFailDelib + item.attrFailNest);
+        let pct = item.hc > 0 ? ((grads / item.hc) * 100).toFixed(1) : "0.0";
+        
+        const row = document.createElement("tr");
+        row.className = "border-b border-slate-900 hover:bg-slate-900/30 text-slate-400";
+        row.innerHTML = `
+          <td class="py-2 font-semibold text-slate-300">${selectedSite} - W${item.wave}</td>
+          <td class="py-2">${item.prodStart}</td>
+          <td class="py-2">${item.opsStart}</td>
+          <td class="py-2 text-right">{item.hc}</td>
+          <td class="py-2 text-right font-bold text-emerald-400">${pct}%</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ==========================================
+    // ADD CUSTOM WAVE MODAL & SUBMIT CONTROLLERS
+    // ==========================================
+    function openAddWaveModal() {
+      document.getElementById("add-wave-modal").classList.remove("hidden");
+    }
+
+    function closeAddWaveModal() {
+      document.getElementById("add-wave-modal").classList.add("hidden");
+    }
+
+    function submitAddWaveForm() {
+      const waveId = document.getElementById("modal-wave-id").value.trim();
+      const calWeek = parseInt(document.getElementById("modal-cal-week").value) || 0;
+      const ptStart = document.getElementById("modal-pt-start").value.trim() || "01/01";
+      const opsStart = document.getElementById("modal-ops-start").value.trim() || "01/22";
+      const hc = parseInt(document.getElementById("modal-hc").value) || 0;
+      const attrPre = parseInt(document.getElementById("modal-attr-pre").value) || 0;
+      const attrProd = parseInt(document.getElementById("modal-attr-prod").value) || 0;
+      const attrFailDelib = parseInt(document.getElementById("modal-attr-fail-delib").value) || 0;
+      const extNest = parseInt(document.getElementById("modal-ext-nest").value) || 0;
+      const attrFailNest = parseInt(document.getElementById("modal-attr-fail-nest").value) || 0;
+      const qa = parseFloat(document.getElementById("modal-qa").value) || 0;
+      const csat = parseFloat(document.getElementById("modal-csat").value) || 0;
+      const score = parseFloat(document.getElementById("modal-score").value) || 0;
+
+      if (!waveId) {
+        alert("Please enter a valid Wave ID.");
+        return;
+      }
+
+      const newRowObj = {
+        wave: waveId,
+        prodStart: ptStart,
+        opsStart: opsStart,
+        calWeek: calWeek,
+        hc: hc,
+        attrPre: attrPre,
+        attrProd: attrProd,
+        attrFailDelib: attrFailDelib,
+        extNest: extNest,
+        attrFailNest: attrFailNest,
+        qa: qa,
+        csat: csat,
+        score: score
+      };
+
+      // Add to dataset
+      if (!datasets[selectedSite]) {
+        datasets[selectedSite] = [];
+      }
+      datasets[selectedSite].push(newRowObj);
+
+      // Re-trigger sync
+      selectedWaveId = waveId;
+      syncPortal();
+      closeAddWaveModal();
+    }
+
+    // ==========================================
+    // HORIZONTAL CSV PARSER ENGINE
+    // ==========================================
+    function handleCSVUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      processCSVFile(file);
+    }
+
+    function processCSVFile(file) {
+      const errorDiv = document.getElementById("parser-error");
+      const successDiv = document.getElementById("parser-success");
+      
+      errorDiv.classList.add("hidden");
+      successDiv.classList.add("hidden");
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target.result;
+        try {
+          const parsed = parseHorizontalCSV(text);
+          if (parsed.length === 0) {
+            throw new Error("Could not parse any valid wave data row. Verify headings match BPO format.");
+          }
+          
+          datasets[selectedSite] = parsed;
+          successDiv.textContent = `Successfully parsed and loaded ${parsed.length} Waves into ${selectedSite}!`;
+          successDiv.classList.remove("hidden");
+          
+          if (parsed.length > 0) {
+            selectedWaveId = parsed[0].wave;
+          }
+          syncPortal();
+        } catch (err) {
+          errorDiv.textContent = "Error reading CSV: " + err.message;
+          errorDiv.classList.remove("hidden");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function parseHorizontalCSV(csvText) {
+      const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== "");
+      if (lines.length < 2) return [];
+
+      const matrix = lines.map(line => {
+        let cells = [];
+        let inQuotes = false;
+        let curCell = "";
+        for (let i = 0; i < line.length; i++) {
+          let char = line[i];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            cells.push(curCell.trim());
+            curCell = "";
+          } else {
+            curCell += char;
+          }
+        }
+        cells.push(curCell.trim());
+        return cells;
+      });
+
+      const headerRow = matrix[0];
+      if (headerRow[0].toLowerCase() !== "wave") {
+        throw new Error("Row 1 must be titled 'Wave' for horizontal column translation.");
+      }
+
+      const waveCount = headerRow.length - 1;
+      let parsedWaves = [];
+
+      const labelMapping = {
+        "wave": "wave",
+        "product training start date": "prodStart",
+        "production start date": "opsStart",
+        "calendar week": "calWeek",
+        "starting headcount": "hc",
+        "attrition - pre product training": "attrPre",
+        "attrition - product training": "attrProd",
+        "attrition - failed deliberation": "attrFailDelib",
+        "entered extended nesting": "extNest",
+        "attrition - failed extended nesting": "attrFailNest",
+        "throughput %": "throughput",
+        "extended nesting %": "extNestPct",
+        "qa": "qa",
+        "qa (aqa)": "qa",
+        "csat": "csat",
+        "assessment score": "score"
+      };
+
+      for (let col = 1; col <= waveCount; col++) {
+        let waveVal = headerRow[col];
+        if (!waveVal || waveVal === "2026") continue;
+        
+        let waveObj = {
+          wave: waveVal,
+          prodStart: "",
+          opsStart: "",
+          calWeek: "",
+          hc: 0,
+          attrPre: 0,
+          attrProd: 0,
+          attrFailDelib: 0,
+          extNest: 0,
+          attrFailNest: 0,
+          qa: 0,
+          csat: 0,
+          score: 0
+        };
+
+        for (let row = 1; row < matrix.length; row++) {
+          let metricName = matrix[row][0]?.toLowerCase().trim();
+          let value = matrix[row][col];
+          
+          if (!metricName) continue;
+          
+          let prop = labelMapping[metricName];
+          if (!prop) {
+            if (metricName.includes("product training start")) prop = "prodStart";
+            else if (metricName.includes("production start")) prop = "opsStart";
+            else if (metricName.includes("calendar week")) prop = "calWeek";
+            else if (metricName.includes("starting headcount")) prop = "hc";
+            else if (metricName.includes("pre product training")) prop = "attrPre";
+            else if (metricName.includes("attrition - product")) prop = "attrProd";
+            else if (metricName.includes("deliberation")) prop = "attrFailDelib";
+            else if (metricName.includes("entered extended nesting")) prop = "extNest";
+            else if (metricName.includes("failed extended nesting")) prop = "attrFailNest";
+            else if (metricName.includes("qa") || metricName.includes("aqa")) prop = "qa";
+            else if (metricName.includes("csat")) prop = "csat";
+            else if (metricName.includes("assessment score")) prop = "score";
+          }
+
+          if (prop) {
+            if (["hc", "attrPre", "attrProd", "attrFailDelib", "extNest", "attrFailNest", "calWeek"].includes(prop)) {
+              waveObj[prop] = value ? parseInt(value.replace(/[^0-9]/g, ""), 10) || 0 : 0;
+            } else if (["qa", "csat", "score"].includes(prop)) {
+              waveObj[prop] = value ? parseFloat(value.replace(/[^\d.]/g, "")) || 0 : 0;
+            } else {
+              waveObj[prop] = value || "";
+            }
+          }
+        }
+        parsedWaves.push(waveObj);
+      }
+      return parsedWaves;
+    }
+
+    // ==========================================
+    // EXPORTER FOR MASTER LEDGER CSV
+    // ==========================================
+    function downloadMasterLogCSV() {
+      let rows = [
+        ["Site Name", "Wave ID", "Product Training Start Date", "Production Start Date", "Calendar Week", "Starting Headcount", "Attrition - Pre Product Training", "Attrition - Product Training", "Attrition - Failed Deliberation", "Entered Extended Nesting", "Attrition - Failed Extended Nesting", "Throughput %", "Extended Nesting %", "QA (AQA)", "CSAT", "Assessment Score"]
+      ];
+
+      Object.keys(datasets).forEach(site => {
+        datasets[site].forEach(item => {
+          let grads = item.hc - (item.attrPre + item.attrProd + item.attrFailDelib + item.attrFailNest);
+          let throughputPct = item.hc > 0 ? ((grads / item.hc) * 100).toFixed(1) + "%" : "0.0%";
+          let nestingPct = grads > 0 ? ((item.extNest / grads) * 100).toFixed(1) + "%" : "0.0%";
+          
+          rows.push([
+            site,
+            item.wave,
+            item.prodStart,
+            item.opsStart,
+            item.calWeek,
+            item.hc,
+            item.attrPre,
+            item.attrProd,
+            item.attrFailDelib,
+            item.extNest,
+            item.attrFailNest,
+            throughputPct,
+            nestingPct,
+            item.qa ? item.qa + "%" : "0.0%",
+            item.csat ? item.csat + "%" : "0.0%",
+            item.score ? item.score + "%" : "0.0%"
+          ]);
+        });
+      });
+
+      // Wrap values correctly for CSV formulation
+      let csvContent = "data:text/csv;charset=utf-8," 
+        + rows.map(e => e.map(val => `"${val}"`).join(",")).join("\n");
+      
+      let encodedUri = encodeURI(csvContent);
+      let link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Master_BPO_Training_Log_Export.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // ==========================================
+    // TAB MANAGER
+    // ==========================================
+    function switchTab(tabId) {
+      activeTab = tabId;
+      
+      // Toggle views
+      document.querySelectorAll(".tab-pane").forEach(el => el.classList.add("hidden"));
+      document.getElementById(`tab-view-${tabId}`).classList.remove("hidden");
+
+      // Update active nav style
+      const tabIds = ["analytics", "ledger", "transposer", "uploader"];
+      tabIds.forEach(id => {
+        const btn = document.getElementById(`tab-btn-${id}`);
+        if (id === tabId) {
+          btn.className = "px-4 py-2 rounded-md text-sm font-semibold transition bg-indigo-600/25 text-indigo-400 border border-indigo-500/30 whitespace-nowrap";
+        } else {
+          btn.className = "px-4 py-2 rounded-md text-sm font-semibold transition text-slate-400 hover:text-slate-100 whitespace-nowrap";
+        }
+      });
+
+      // Trigger redraws if viewport size changes
+      if (tabId === "analytics") {
+        renderTrends();
+      }
+    }
+  </script>
+</body>
+</html>
